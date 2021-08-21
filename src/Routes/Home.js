@@ -1,4 +1,4 @@
-import { gql, useQuery } from "@apollo/client";
+import { gql, useMutation, useQuery } from "@apollo/client";
 import { Link } from "react-router-dom";
 
 const GET_MOVIES = gql`
@@ -7,7 +7,14 @@ const GET_MOVIES = gql`
       id
       title
       medium_cover_image
+      isLiked @client
     }
+  }
+`;
+
+const LIKE_MOVIE = gql`
+  mutation likeMovie($id:Int!){
+    likeMovie(id:$id) @client
   }
 `;
 
@@ -18,15 +25,25 @@ const Home = () => {
     <>
       {loading && <div>로딩중입니다...</div>}
       {error && null}
-      {data &&
-        data.movies &&
-        data.movies.map((v) => (
-          <Link key={v.id} to={`/${v.id}`}>
+      {data?.movies?.map((v) => (
+        <span key={v.id}>
+          <Link to={`/${v.id}`}>
             <img src={v.medium_cover_image} alt={v.title} />
           </Link>
-        ))}
+          <Button id={v.id} isLiked={v.isLiked} />
+        </span>
+      ))}
     </>
   );
 };
+
+const Button = ({ id, isLiked }) => {
+  const [likeMovie] = useMutation(LIKE_MOVIE, {
+    variables: {
+      id: parseInt(id)
+    }
+  });
+  return <button onClick={likeMovie}>{isLiked ? "Unlike" : "Like"}</button>
+}
 
 export default Home;
